@@ -80,12 +80,13 @@ class LocalServer {
         });
 
         app.get('/', async (req: express.Request, res: express.Response) => {
+			// res.sendStatus(200)
             const launcherHTMLPath = path.join(
                 this.appsPath + 'launcher' + 'index.html'
             );
             const hasLauncher = await fse.pathExists(launcherHTMLPath);
             if (hasLauncher) {
-                return res.sendFile(launcherHTMLPath);
+                return res.status(200).sendFile(launcherHTMLPath);
             }
 			return res.status(200).send("<p style='font-family: Arial, Helvetica, sans-serif;'>Oh no! You don't have the Kloak Platform Launcher!</p>")
         });
@@ -142,7 +143,7 @@ class LocalServer {
             });
         });
 
-        this.server = app.listen(this.PORT, () => {
+        this.server = await app.listen(this.PORT, () => {
             console.table([
                 { 'Kloak Local Server': `http://localhost:${this.PORT}` }
             ]);

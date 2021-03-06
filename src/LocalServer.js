@@ -104,13 +104,13 @@ var LocalServer = /** @class */ (function () {
             (_a = _this.server) === null || _a === void 0 ? void 0 : _a.close();
         };
         this.initialize = function () { return __awaiter(_this, void 0, void 0, function () {
-            var upload, app;
+            var upload, app, _a;
             var _this = this;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0: return [4 /*yield*/, fse.ensureDir(this.appsPath)];
                     case 1:
-                        _a.sent();
+                        _b.sent();
                         upload = multer();
                         app = express();
                         // TESTING PURPOSES
@@ -143,7 +143,7 @@ var LocalServer = /** @class */ (function () {
                                     case 1:
                                         hasLauncher = _a.sent();
                                         if (hasLauncher) {
-                                            return [2 /*return*/, res.sendFile(launcherHTMLPath)];
+                                            return [2 /*return*/, res.status(200).sendFile(launcherHTMLPath)];
                                         }
                                         return [2 /*return*/, res.status(200).send("<p style='font-family: Arial, Helvetica, sans-serif;'>Oh no! You don't have the Kloak Platform Launcher!</p>")];
                                 }
@@ -190,11 +190,14 @@ var LocalServer = /** @class */ (function () {
                                 return res.end();
                             });
                         });
-                        this.server = app.listen(this.PORT, function () {
-                            console.table([
-                                { 'Kloak Local Server': "http://localhost:" + _this.PORT }
-                            ]);
-                        });
+                        _a = this;
+                        return [4 /*yield*/, app.listen(this.PORT, function () {
+                                console.table([
+                                    { 'Kloak Local Server': "http://localhost:" + _this.PORT }
+                                ]);
+                            })];
+                    case 2:
+                        _a.server = _b.sent();
                         return [2 /*return*/];
                 }
             });

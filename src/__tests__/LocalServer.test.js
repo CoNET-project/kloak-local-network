@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -35,26 +34,30 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-exports.__esModule = true;
-var supertest = require('supertest');
-var LocalServer_1 = require("../LocalServer");
+var _this = this;
+var request = require('supertest');
 var PORT = 3000;
 var url = "http://localhost:" + PORT;
-var testServer = new LocalServer_1["default"](PORT);
-var request = supertest(url);
 console.log = function () { };
-describe("API Endpoints", function () {
-    // it("Should successfully connect to root launcher.", async (done) => {
-    // 	const response = await request.get("/")
-    // 	expect(response['status']).toBe(200)
-    // 	testServer.close()
-    // 	done()
-    // })
-    it("Should pass IMAP test.", function (done) { return __awaiter(void 0, void 0, void 0, function () {
+describe('API Endpoints', function () {
+    it('Should successfully connect to root launcher.', function (done) { return __awaiter(_this, void 0, void 0, function () {
         var response;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, request.post('/testImap').send({
+                case 0: return [4 /*yield*/, request(url).get('/')];
+                case 1:
+                    response = _a.sent();
+                    expect(response['status']).toBe(200 || 304);
+                    done();
+                    return [2 /*return*/];
+            }
+        });
+    }); });
+    it("Should pass IMAP test.", function (done) { return __awaiter(_this, void 0, void 0, function () {
+        var response;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, request(url).post('/testImap').send({
                         imapUserName: "qtgate_test29@icloud.com",
                         imapUserPassword: "tslh-ujpp-gbqj-wejo",
                         imapPortNumber: "993",
@@ -68,15 +71,22 @@ describe("API Endpoints", function () {
             }
         });
     }); });
-    // it("Should fail IMAP test. ", async (done) => {
-    // 	const response = await request.post('/testImap').send({
-    // 		imapUserName: "qtgate_test29@icloud.com",
-    // 		imapUserPassword: "123",
-    // 		imapPortNumber: "993",
-    // 		imapServer: "imap.mail.me.com"
-    // 	})
-    // 	expect(response['status']).toBe(400)
-    // 	server.close()
-    // 	done()
-    // })
+    it("Should fail IMAP test. ", function (done) { return __awaiter(_this, void 0, void 0, function () {
+        var response;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, request(url).post('/testImap').send({
+                        imapUserName: "qtgate_test29@icloud.com",
+                        imapUserPassword: "123",
+                        imapPortNumber: "993",
+                        imapServer: "imap.mail.me.com"
+                    })];
+                case 1:
+                    response = _a.sent();
+                    expect(response['status']).toBe(400);
+                    done();
+                    return [2 /*return*/];
+            }
+        });
+    }); });
 });
