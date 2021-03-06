@@ -85,7 +85,6 @@ class LocalServer {
             const launcherHTMLPath = path.join(
                 this.appsPath  + '/launcher' + '/index.html'
             );
-			console.log(launcherHTMLPath)
             const hasLauncher = await fse.pathExists(launcherHTMLPath);
             if (hasLauncher) {
                 return res.status(200).sendFile(launcherHTMLPath);
