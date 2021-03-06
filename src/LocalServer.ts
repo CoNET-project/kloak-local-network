@@ -8,9 +8,10 @@ const fse = require('fs-extra');
 import * as Imap from './Imap';
 
 class LocalServer {
-    private appsPath = path.normalize(__dirname + '/../apps/');
+    private appsPath: string = ""
     private server: http.Server | null = null;
-    constructor(private PORT = 3000) {
+    constructor(private PORT = 3000, appsPath: string) {
+		this.appsPath = path.normalize(appsPath + '/')
         this.initialize();
     }
 
@@ -73,7 +74,7 @@ class LocalServer {
 
         app.use(bodyParser.json());
         app.use(express.static('static'));
-        app.use('/', express.static(path.join(__dirname, '../apps')));
+        app.use('/', express.static(this.appsPath));
 
         app.once('error', (err: any) => {
             return process.exit(1);
@@ -82,8 +83,9 @@ class LocalServer {
         app.get('/', async (req: express.Request, res: express.Response) => {
 			// res.sendStatus(200)
             const launcherHTMLPath = path.join(
-                this.appsPath + 'launcher' + '/' + 'index.html'
+                this.appsPath  + '/launcher' + '/index.html'
             );
+			console.log(launcherHTMLPath)
             const hasLauncher = await fse.pathExists(launcherHTMLPath);
             if (hasLauncher) {
                 return res.status(200).sendFile(launcherHTMLPath);
@@ -106,7 +108,7 @@ class LocalServer {
                     res.sendStatus(400);
                     return res.end();
                 }
-                const rootFolder = path.normalize(this.appsPath + app_id);
+                const rootFolder = path.normalize(this.appsPath + '/' + app_id);
                 fse.remove(rootFolder, (err: any) => {
                     if (err) {
                         return res.sendStatus(400);

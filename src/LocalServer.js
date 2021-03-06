@@ -44,11 +44,11 @@ var jszip = require("jszip");
 var fse = require('fs-extra');
 var Imap = require("./Imap");
 var LocalServer = /** @class */ (function () {
-    function LocalServer(PORT) {
+    function LocalServer(PORT, appsPath) {
         var _this = this;
         if (PORT === void 0) { PORT = 3000; }
         this.PORT = PORT;
-        this.appsPath = path.normalize(__dirname + '/../apps/');
+        this.appsPath = "";
         this.server = null;
         this.unzipApplication = function (buffer) { return __awaiter(_this, void 0, void 0, function () {
             var _this = this;
@@ -129,7 +129,7 @@ var LocalServer = /** @class */ (function () {
                         // })
                         app.use(bodyParser.json());
                         app.use(express.static('static'));
-                        app.use('/', express.static(path.join(__dirname, '../apps')));
+                        app.use('/', express.static(this.appsPath));
                         app.once('error', function (err) {
                             return process.exit(1);
                         });
@@ -138,7 +138,8 @@ var LocalServer = /** @class */ (function () {
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
-                                        launcherHTMLPath = path.join(this.appsPath + 'launcher' + '/' + 'index.html');
+                                        launcherHTMLPath = path.join(this.appsPath + '/launcher' + '/index.html');
+                                        console.log(launcherHTMLPath);
                                         return [4 /*yield*/, fse.pathExists(launcherHTMLPath)];
                                     case 1:
                                         hasLauncher = _a.sent();
@@ -159,7 +160,7 @@ var LocalServer = /** @class */ (function () {
                                 res.sendStatus(400);
                                 return res.end();
                             }
-                            var rootFolder = path.normalize(_this.appsPath + app_id);
+                            var rootFolder = path.normalize(_this.appsPath + '/' + app_id);
                             fse.remove(rootFolder, function (err) {
                                 if (err) {
                                     return res.sendStatus(400);
@@ -202,6 +203,7 @@ var LocalServer = /** @class */ (function () {
                 }
             });
         }); };
+        this.appsPath = path.normalize(appsPath + '/');
         this.initialize();
     }
     return LocalServer;
