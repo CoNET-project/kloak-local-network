@@ -82,7 +82,7 @@ class LocalServer {
         app.get('/', async (req: express.Request, res: express.Response) => {
 			// res.sendStatus(200)
             const launcherHTMLPath = path.join(
-                this.appsPath + 'launcher' + 'index.html'
+                this.appsPath + 'launcher' + '/' + 'index.html'
             );
             const hasLauncher = await fse.pathExists(launcherHTMLPath);
             if (hasLauncher) {

@@ -138,7 +138,7 @@ var LocalServer = /** @class */ (function () {
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
-                                        launcherHTMLPath = path.join(this.appsPath + 'launcher' + 'index.html');
+                                        launcherHTMLPath = path.join(this.appsPath + 'launcher' + '/' + 'index.html');
                                         return [4 /*yield*/, fse.pathExists(launcherHTMLPath)];
                                     case 1:
                                         hasLauncher = _a.sent();
