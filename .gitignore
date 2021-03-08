@@ -1,9 +1,9 @@
 node_modules/
 apps/
+.idea
 .cache/
 public
 # macOS
 .DS_Store
 package-lock.json
 dist
-app

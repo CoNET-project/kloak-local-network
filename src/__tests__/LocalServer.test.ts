@@ -3,6 +3,7 @@ const PORT = 3000;
 const url = `http://localhost:${PORT}`;
 console.log = () => {};
 
+
 describe('API Endpoints', () => {
     it('Should successfully connect to root launcher.', async (done) => {
         const response = await request(url).get('/');
