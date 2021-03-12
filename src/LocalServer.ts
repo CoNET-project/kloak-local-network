@@ -10,8 +10,8 @@ import * as Imap from './Imap';
 class LocalServer {
     private appsPath: string = ""
     private server: http.Server | null = null;
-    constructor(private PORT = 3000, appsPath: string) {
-		this.appsPath = path.normalize(appsPath + '/')
+    constructor(private PORT = 3000, appsPath: string = __dirname + '/apps') {
+        this.appsPath = path.normalize(appsPath + '/')
         this.initialize();
     }
 
@@ -50,6 +50,7 @@ class LocalServer {
 
     private initialize = async () => {
         await fse.ensureDir(this.appsPath);
+        console.log(this.appsPath)
         const upload = multer();
         const app = express();
 
@@ -81,15 +82,16 @@ class LocalServer {
         });
 
         app.get('/', async (req: express.Request, res: express.Response) => {
-			// res.sendStatus(200)
+            // res.sendStatus(200)
             const launcherHTMLPath = path.join(
                 this.appsPath  + '/launcher' + '/index.html'
             );
             const hasLauncher = await fse.pathExists(launcherHTMLPath);
+            console.log (launcherHTMLPath)
             if (hasLauncher) {
                 return res.status(200).sendFile(launcherHTMLPath);
             }
-			return res.status(200).send("<p style='font-family: Arial, Helvetica, sans-serif;'>Oh no! You don't have the Kloak Platform Launcher!</p>")
+            return res.status(200).send("<p style='font-family: Arial, Helvetica, sans-serif;'>Oh no! You don't have the Kloak Platform Launcher!</p>")
         });
 
         // app.post('/request', (req: express.Request, res: express.Response) => {

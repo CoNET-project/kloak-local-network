@@ -47,6 +47,7 @@ var LocalServer = /** @class */ (function () {
     function LocalServer(PORT, appsPath) {
         var _this = this;
         if (PORT === void 0) { PORT = 3000; }
+        if (appsPath === void 0) { appsPath = __dirname + '/apps'; }
         this.PORT = PORT;
         this.appsPath = "";
         this.server = null;
@@ -111,6 +112,7 @@ var LocalServer = /** @class */ (function () {
                     case 0: return [4 /*yield*/, fse.ensureDir(this.appsPath)];
                     case 1:
                         _b.sent();
+                        console.log(this.appsPath);
                         upload = multer();
                         app = express();
                         // TESTING PURPOSES
@@ -142,6 +144,7 @@ var LocalServer = /** @class */ (function () {
                                         return [4 /*yield*/, fse.pathExists(launcherHTMLPath)];
                                     case 1:
                                         hasLauncher = _a.sent();
+                                        console.log(launcherHTMLPath);
                                         if (hasLauncher) {
                                             return [2 /*return*/, res.status(200).sendFile(launcherHTMLPath)];
                                         }
