@@ -1,8 +1,8 @@
 {
-	"name": "@kloak-it/kloak-local-network",
+	"name": "@conet-project/seguro-local-network",
 	"version": "0.1.1",
 	"license": "MIT",
-	"description": "Kloak platform network module",
+	"description": "Seguro Platform network module",
 	"scripts": {
 		"test": "jest --detectOpenHandles"
 	},
