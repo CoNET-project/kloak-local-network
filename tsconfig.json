@@ -3,5 +3,5 @@
 		"allowJs": true,
 		"module": "CommonJS",
 		"target": "ESNext"
-    }
+	}
 }

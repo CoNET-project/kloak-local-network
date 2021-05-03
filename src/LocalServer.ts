@@ -22,7 +22,8 @@ class LocalServer {
     private localserver: Server = null
 
     private connect_peer_pool: any [] = []
-    constructor ( private PORT = 3000 ) {
+    constructor ( private PORT = 3000, appsPath: string ) {
+        this.appsPath = appsPath
         this.initialize()
     }
 
