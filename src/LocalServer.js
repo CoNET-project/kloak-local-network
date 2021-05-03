@@ -15,9 +15,9 @@ const getEncryptedMessagePublicKeyID = async (encryptedMessage, CallBack) => {
     return CallBack(null, encryptObj.getEncryptionKeyIds().map(n => n.toHex().toUpperCase()));
 };
 class LocalServer {
-    constructor(PORT = 3000) {
+    constructor(PORT = 3000, appsPath = path_1.join(__dirname, 'apps')) {
         this.PORT = PORT;
-        this.appsPath = path_1.join(__dirname, 'apps');
+        this.appsPath = appsPath;
         this.localserver = null;
         this.connect_peer_pool = [];
         this.unzipApplication = async (buffer) => {
@@ -58,6 +58,7 @@ class LocalServer {
             });
             app.get('/', async (req, res) => {
                 // res.sendStatus(200)
+                console.log(this.appsPath);
                 const launcherHTMLPath = path_1.join(this.appsPath + '/launcher' + '/index.html');
                 const hasLauncher = await fse.pathExists(launcherHTMLPath);
                 console.log(launcherHTMLPath);
