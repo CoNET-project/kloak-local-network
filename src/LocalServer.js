@@ -16,9 +16,9 @@ const getEncryptedMessagePublicKeyID = async (encryptedMessage, CallBack) => {
     return CallBack(null, encryptObj.getEncryptionKeyIds().map(n => n.toHex().toUpperCase()));
 };
 class LocalServer {
-    constructor(PORT = 3000) {
+    constructor(PORT = 3000, appsPath = path_1.join(__dirname, 'apps')) {
         this.PORT = PORT;
-        this.appsPath = path_1.join(__dirname, 'apps');
+        this.appsPath = appsPath;
         this.localserver = null;
         this.connect_peer_pool = [];
         this.unzipApplication = async (buffer) => {

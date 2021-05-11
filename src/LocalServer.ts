@@ -19,11 +19,10 @@ const getEncryptedMessagePublicKeyID = async ( encryptedMessage: string, CallBac
 
 
 class LocalServer {
-    private appsPath = join ( __dirname, 'apps' )
     private localserver: Server = null
 
     private connect_peer_pool: any [] = []
-    constructor ( private PORT = 3000 ) {
+    constructor ( private PORT = 3000, private appsPath: string = join ( __dirname, 'apps' ) ) {
         this.initialize()
     }
 
