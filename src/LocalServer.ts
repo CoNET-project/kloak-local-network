@@ -89,6 +89,20 @@ class LocalServer {
             return process.exit (1)
         })
 
+        app.get('/', async (req: express.Request, res: express.Response) => {
+            // res.sendStatus(200)
+            console.log(this.appsPath)
+            const launcherHTMLPath = join(
+                this.appsPath  + '/launcher' + '/index.html'
+            );
+            const hasLauncher = await fse.pathExists(launcherHTMLPath);
+            console.log (launcherHTMLPath)
+            if (hasLauncher) {
+                return res.status(200).sendFile(launcherHTMLPath);
+            }
+            return res.status(200).send("<p style='font-family: Arial, Helvetica, sans-serif;'>Oh no! You don't have the Kloak Platform Launcher!</p>")
+        });
+
         app.post ( '/update', upload.single ( 'app_data' ),
             ( req: express.Request, res: express.Response ) => {
                 const { app_id } = req.body
