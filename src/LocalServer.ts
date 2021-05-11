@@ -10,6 +10,7 @@ import { inspect } from 'util'
 import type { imapPeer } from './imapPeer'
 import { testImapServer, getInformationFromSeguro, buildConnect } from './network'
 const upload = require ( 'multer' )()
+const cors = require('cors')
 
 const getEncryptedMessagePublicKeyID = async ( encryptedMessage: string, CallBack ) => {
     const encryptObj = await readMessage({ armoredMessage: encryptedMessage })
@@ -18,10 +19,11 @@ const getEncryptedMessagePublicKeyID = async ( encryptedMessage: string, CallBac
 
 
 class LocalServer {
+    private appsPath = join ( __dirname, 'apps' )
     private localserver: Server = null
 
     private connect_peer_pool: any [] = []
-    constructor ( private PORT = 3000, private appsPath: string = join ( __dirname, 'apps' ) ) {
+    constructor ( private PORT = 3000 ) {
         this.initialize()
     }
 
@@ -80,25 +82,12 @@ class LocalServer {
         const folder = join ( this.appsPath, 'launcher' )
         app.use ( '/', express.static ( folder ))
         app.use ( express.json ())
+        app.use(cors())
 
         app.once ( 'error', ( err: any ) => {
             console.log ( err )
             return process.exit (1)
         })
-
-        app.get('/', async (req: express.Request, res: express.Response) => {
-            // res.sendStatus(200)
-            console.log(this.appsPath)
-            const launcherHTMLPath = join(
-                this.appsPath  + '/launcher' + '/index.html'
-            );
-            const hasLauncher = await fse.pathExists(launcherHTMLPath);
-            console.log (launcherHTMLPath)
-            if (hasLauncher) {
-                return res.status(200).sendFile(launcherHTMLPath);
-            }
-            return res.status(200).send("<p style='font-family: Arial, Helvetica, sans-serif;'>Oh no! You don't have the Kloak Platform Launcher!</p>")
-        });
 
         app.post ( '/update', upload.single ( 'app_data' ),
             ( req: express.Request, res: express.Response ) => {
@@ -184,10 +173,16 @@ class LocalServer {
          */
         app.post ( '/postMessage', ( req, res ) => {
             const post_data: postData = req.body
-
+            console.log ( inspect( { 'localhost:3000/postMessage' : post_data }, false, 2, true ))
             if ( post_data.connectUUID ) {
+                if ( !post_data.encryptedMessage ) {
+                    console.log ( inspect ({ postMessage_ERROR_Have_not_encryptedMessage: post_data }, false, 3, true ))
+                    res.sendStatus ( 404 )
+                    return res.end ()
+                }
                 const index = this.connect_peer_pool.findIndex ( n => n.serialID === post_data.connectUUID )
                 if ( index < 0 ) {
+                    console.log ( inspect ({ postMessage_ERROR_Have_not_connectUUID: post_data }, false, 3, true ))
                     res.sendStatus ( 404 )
                     return res.end ()
                 }
@@ -208,11 +203,13 @@ class LocalServer {
             if ( post_data.encryptedMessage ) {
 
                 return getEncryptedMessagePublicKeyID ( post_data.encryptedMessage, ( err, keys: string[] ) => {
-                    console.log ( inspect ( { getEncryptedMessagePublicKeyID: keys }, false, 3, true ))
+
                     if ( !keys || !keys.length ) {
+                        console.log ( inspect ({ postMessage_ERROR_have_not_device_key_infomation: post_data }, false, 3, true ))
                         res.sendStatus ( 500 )
                         return res.end ()
                     }
+                    console.log ( inspect ( { getEncryptedMessagePublicKeyID: keys }, false, 3, true ))
                     keys.forEach ( n => {
                         this.postMessageToLocalDevice ( n, post_data.encryptedMessage )
                     })
@@ -226,7 +223,7 @@ class LocalServer {
              */
 
             console.log ( inspect ( post_data, false, 3, true ))
-            console.log (`Unknown type of ${ post_data }`)
+            console.log (`unknow type of ${ post_data }`)
             res.sendStatus ( 404 )
             return res.end ()
         })
@@ -239,8 +236,7 @@ class LocalServer {
                 let kk: connect_imap_reqponse = null
 
                 try {
-                    // @ts-ignore
-                    kk = JSON.parse ( message )
+                    kk = JSON.parse ( message as string )
                 } catch ( ex ) {
                     ws.send ( JSON.stringify ({ status: `Data format error! [${ message }]` }) )
                     return ws.close ()

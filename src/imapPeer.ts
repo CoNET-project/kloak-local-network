@@ -7,14 +7,14 @@ const resetConnectTimeLength = 1000 * 60 * 15
 const pingPongTimeOut = 1000 * 15
 const debug = true
 
-export const sendMessageToFolder = ( IMapConnect: imapConnect, writeFolder: string, message: string, subject: string, createFolder: boolean, callback ) => {
+export const sendMessageToFolder = ( IMapConnect: imapConnect, writeFolder: string, message: string, subject: string, createFolder: boolean, CallBack ) => {
     const wImap = new qtGateImap ( IMapConnect, null, false, writeFolder, debug, null )
     let _callback = false
     //console.log ( `seneMessageToFolder !!! ${ subject }`)
     wImap.once ( 'error', err => {
         wImap.destroyAll ( err )
         if ( !_callback ) {
-            callback ( err )
+            CallBack ( err )
             return _callback = true
         }
     })
@@ -35,7 +35,7 @@ export const sendMessageToFolder = ( IMapConnect: imapConnect, writeFolder: stri
                 wImap.destroyAll ( err )
 
             }
-            return callback ( err )
+            return CallBack ( err )
         })
     })
 
@@ -110,48 +110,32 @@ export class imapPeer extends EventEmitter {
         }
 
 
-        console.log ( ` subject = [${Buffer.from (subject).toString ('base64')}] this.pingUuid = [${ this.pingUuid }] base64 = [${ Buffer.from (this.pingUuid ).toString ('base64')}]`)
-        if ( subject ) {
 
-            /**
-             *
-             *
-             *
-             */
+        if ( attr.length < 40 ) {
 
+            const _attr = attr.split (/\r?\n/)[0]
 
-            if ( attr.length < 40 ) {
-                console.log (`new attr\n${ attr }\n`)
-                const _attr = attr.split (/\r?\n/)[0]
-
-                if ( !this.connected && !this.pinging ) {
-                    this.Ping ( false )
-                }
-
-                if ( subject === _attr ) {
-                    console.log (`\n\nthis.replyPing [${_attr }]\n\n this.ping.uuid = [${ this.pingUuid }]`)
-
-                    return this.replyPing ( subject )
-                }
-                console.log ( `this.pingUuid = [${ this.pingUuid  }] subject [${ subject }]`)
-                return console.log (`new attr\n${ _attr }\n _attr [${ Buffer.from (_attr).toString ('hex') }] subject [${ Buffer.from ( subject ).toString ('hex') }]]!== attr 【${ JSON.stringify ( _attr )}】`)
+            if ( !this.connected && !this.pinging ) {
+                this.Ping ( false )
             }
 
+            if ( subject === _attr ) {
+                console.log (`\n\nthis.replyPing [${_attr }]\n\n this.ping.uuid = [${ this.pingUuid }]`)
 
-
-
-
-            /**
-             * 			ignore old mail
-             */
-            if ( !this.connected ) {
-                return
+                return this.replyPing ( subject )
             }
-
-            return this.newMail ( attr, subject )
-
+            return console.log (`new attr\n${ _attr }\n _attr [${ Buffer.from (_attr).toString ('hex') }] subject [${ Buffer.from ( subject ).toString ('hex') }]]!== attr 【${ JSON.stringify ( _attr )}】`)
         }
-        console.log (`get mail have not subject\n\n`, email.toString() )
+
+
+        /**
+         * 			ignore old mail
+         */
+        if ( ! this.connected ) {
+            return
+        }
+
+        return this.newMail ( attr, subject )
 
     }
 
@@ -166,9 +150,9 @@ export class imapPeer extends EventEmitter {
 
     }
 
-    public AppendWImap1 ( mail: string, uuid: string, callback ) {
-
-        return sendMessageToFolder ( this.imapData, this.writeBox, mail, uuid, true, callback )
+    public AppendWImap1 ( mail: string, uuid: string, CallBack ) {
+        const sendData = mail ? Buffer.from (mail).toString ( 'base64' ) : ''
+        return sendMessageToFolder ( this.imapData, this.writeBox, sendData , uuid, true, CallBack )
 
     }
 
@@ -270,16 +254,16 @@ export class imapPeer extends EventEmitter {
     constructor ( public imapData: imapConnect, private listenBox: string, private writeBox: string, public newMail, public exit: ( err?: number ) => void ) {
         super ()
         debug ? saveLog ( `doing peer account [${ imapData.imapUserName }] listen with[${ listenBox }], write with [${ writeBox }] `): null
-        console.dir ( `newMail = ${typeof newMail}` )
+        console.dir ( `newMail = ${ typeof newMail }` )
         this.newReadImap ()
 
     }
 
-    public closePeer ( callback ) {
+    public closePeer ( CallBack ) {
         return  series ([
             next => this.AppendWImap1 ('', 'Close.', next ),
             next => this.rImap.logout ( next )
-        ], callback )
+        ], CallBack )
 
     }
 

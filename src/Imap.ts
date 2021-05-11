@@ -29,7 +29,7 @@ import type { TLSSocket } from 'tls'
 
 
 const MAX_INT = 9007199254740992
-const debug = true
+const debug = false
 
 const NoopLoopWaitingTime = 1000 * 1
 
