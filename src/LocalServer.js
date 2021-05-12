@@ -191,7 +191,9 @@ class LocalServer {
                 ws.on('message', message => {
                     let kk = null;
                     try {
+                        console.log(message);
                         kk = JSON.parse(message);
+                        console.log(kk);
                     }
                     catch (ex) {
                         ws.send(JSON.stringify({ status: `Data format error! [${message}]` }));

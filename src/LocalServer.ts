@@ -249,7 +249,9 @@ class LocalServer {
                 let kk: connect_imap_reqponse = null
 
                 try {
+                    console.log(message)
                     kk = JSON.parse ( message as string )
+                    console.log(kk)
                 } catch ( ex ) {
                     ws.send ( JSON.stringify ({ status: `Data format error! [${ message }]` }) )
                     return ws.close ()

@@ -113,7 +113,7 @@ export const buildConnect = ( responseJson: connect_imap_reqponse, callback ) =>
         return callback ( new Error ('Data format error!'))
     }
     const imapData: imapConnect = {
-        imapPortNumber: responseJson.imap_account.imap_port_number,
+        imapPortNumber: responseJson.imap_account.imap_port_number || 993,
         imapServer: responseJson.imap_account.imap_server,
         imapSsl: true,
         imapUserName: responseJson.imap_account.imap_username,
