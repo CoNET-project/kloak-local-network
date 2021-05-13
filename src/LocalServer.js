@@ -218,6 +218,11 @@ class LocalServer {
                             console.log(`WS [${serialID}] on close`);
                         });
                     });
+                    peer.once('pingTimeOut', () => {
+                        peer.destroy();
+                        ws.send(JSON.stringify({ status: 'pingTimeOut' }));
+                        return ws.close();
+                    });
                 });
             });
             wsServerConnect.on('peerToPeerConnecting', ws => {
