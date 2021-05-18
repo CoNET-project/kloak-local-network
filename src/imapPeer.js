@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.imapPeer = exports.sendMessageToFolder = void 0;
+exports.imapPeer = exports.seneMessageToFolder = void 0;
 const events_1 = require("events");
 const Imap_1 = require("./Imap");
 const async_1 = require("async");
@@ -8,7 +8,7 @@ const uuid_1 = require("uuid");
 const resetConnectTimeLength = 1000 * 60 * 15;
 const pingPongTimeOut = 1000 * 15;
 const debug = true;
-const sendMessageToFolder = (IMapConnect, writeFolder, message, subject, createFolder, CallBack) => {
+const seneMessageToFolder = (IMapConnect, writeFolder, message, subject, createFolder, CallBack) => {
     const wImap = new Imap_1.qtGateImap(IMapConnect, null, false, writeFolder, debug, null);
     let _callback = false;
     //console.log ( `seneMessageToFolder !!! ${ subject }`)
@@ -38,7 +38,7 @@ const sendMessageToFolder = (IMapConnect, writeFolder, message, subject, createF
         });
     });
 };
-exports.sendMessageToFolder = sendMessageToFolder;
+exports.seneMessageToFolder = seneMessageToFolder;
 class imapPeer extends events_1.EventEmitter {
     constructor(imapData, listenBox, writeBox, newMail, exit) {
         super();
@@ -130,7 +130,7 @@ class imapPeer extends events_1.EventEmitter {
     }
     AppendWImap1(mail, uuid, CallBack) {
         const sendData = mail ? Buffer.from(mail).toString('base64') : '';
-        return exports.sendMessageToFolder(this.imapData, this.writeBox, sendData, uuid, true, CallBack);
+        return exports.seneMessageToFolder(this.imapData, this.writeBox, sendData, uuid, true, CallBack);
     }
     setTimeOutOfPing(sendMail) {
         console.trace(`setTimeOutOfPing [${this.pingUuid}]`);
@@ -138,7 +138,7 @@ class imapPeer extends events_1.EventEmitter {
         clearTimeout(this.needPingTimeOut);
         debug ? Imap_1.saveLog(`Make Time Out for a Ping, ping ID = [${this.pingUuid}]`, true) : null;
         return this.waitingReplyTimeOut = setTimeout(() => {
-            //debug ? saveLog ( `ON setTimeOutOfPing this.emit ( 'pingTimeOut' ) pingID = [${ this.pingUuid }] `, true ): null
+            debug ? Imap_1.saveLog(`ON setTimeOutOfPing this.emit ( 'pingTimeOut' ) pingID = [${this.pingUuid}] `, true) : null;
             this.pingUuid = null;
             this.connected = false;
             this.pinging = false;
@@ -208,7 +208,7 @@ class imapPeer extends events_1.EventEmitter {
     closePeer(CallBack) {
         return async_1.series([
             next => this.AppendWImap1('', 'Close.', next),
-            next => this.rImap?.logout(next)
+            next => this.rImap.logout(next)
         ], CallBack);
     }
     destroy(err) {
@@ -236,7 +236,7 @@ class imapPeer extends events_1.EventEmitter {
         }
     }
     sendDataToANewUuidFolder(data, writeBox, subject, CallBack) {
-        return exports.sendMessageToFolder(this.imapData, writeBox, data, subject, !this.connected, CallBack);
+        return exports.seneMessageToFolder(this.imapData, writeBox, data, subject, !this.connected, CallBack);
     }
 }
 exports.imapPeer = imapPeer;

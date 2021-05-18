@@ -5,13 +5,14 @@ const tls_1 = require("tls");
 const async_1 = require("async");
 const Imap_1 = require("./Imap");
 const imapPeer_1 = require("./imapPeer");
-const connerver = (imapServer, callback) => {
+const util_1 = require("util");
+const connerver = (imapServer, CallBack) => {
     let err = null;
     let time;
     const _connect = () => {
         time = new Date().getTime() - startTime;
         conn.end();
-        return callback(null, time);
+        return CallBack(null, time);
     };
     const startTime = new Date().getTime();
     const conn = tls_1.connect({ host: imapServer, servername: imapServer, port: 993 }, _connect);
@@ -20,14 +21,14 @@ const connerver = (imapServer, callback) => {
         if (typeof conn.destroy === 'function') {
             conn.destroy();
         }
-        callback(err);
+        CallBack(err);
     });
     conn.once('timeout', () => {
         err = new Error('timeout');
         if (typeof conn.destroy === 'function') {
             conn.destroy();
         }
-        callback(err);
+        CallBack(err);
     });
 };
 /**
@@ -41,7 +42,7 @@ const connerver = (imapServer, callback) => {
  * 		time: connected time | null if have error
  * }
  */
-const testImapServer = (callback) => {
+const testImapServer = (CallBack) => {
     const imapServers = ['imap.gmail.com', 'imap.mail.yahoo.com', 'imap.mail.me.com', 'outlook.office365.com', 'imap.zoho.com'];
     const ret = [];
     async_1.each(imapServers, (n, next) => {
@@ -50,11 +51,11 @@ const testImapServer = (callback) => {
             next();
         });
     }, () => {
-        return callback(null, ret);
+        return CallBack(null, ret);
     });
 };
 exports.testImapServer = testImapServer;
-const buildConnectGetImap = (requestObj, callback) => {
+const buildConnectGetImap = (requestObj, CallBack) => {
     const imapData = {
         imapPortNumber: requestObj.imap_account.imap_port_number,
         imapUserName: requestObj.imap_account.imap_username,
@@ -63,25 +64,33 @@ const buildConnectGetImap = (requestObj, callback) => {
         imapServer: requestObj.imap_account.imap_server
     };
     let appendCount = 0;
+    let timeout = requestObj.encrypted_response = null;
+    console.log(util_1.inspect(imapData, false, 3, true));
+    requestObj.error = null;
     const newMail = mail => {
         requestObj.encrypted_response = Imap_1.getMailAttached(mail);
         return cleanUp();
     };
     const cleanUp = () => {
+        clearTimeout(timeout);
         return rImap.logout(() => {
-            callback(null, requestObj);
+            CallBack(null, requestObj);
         });
     };
     const sendMessage = () => {
-        return imapPeer_1.sendMessageToFolder(imapData, requestObj.server_folder, Buffer.from(requestObj.encrypted_request).toString('base64'), '', false, err => {
+        return imapPeer_1.seneMessageToFolder(imapData, requestObj.server_folder, Buffer.from(requestObj.encrypted_request).toString('base64'), '', false, err => {
             if (err) {
                 console.log(err);
                 if (++appendCount > 3) {
-                    requestObj.error = `imap append error [${err.message}]`;
+                    requestObj.error = `IMAP server append error!`;
                     return cleanUp();
                 }
                 return sendMessage();
             }
+            timeout = setTimeout(() => {
+                requestObj.error = 'Listening time out!';
+                return cleanUp();
+            }, 15000);
         });
     };
     const rImap = new Imap_1.qtGateImapRead(imapData, requestObj.client_folder_name, false, newMail, false);
@@ -89,32 +98,31 @@ const buildConnectGetImap = (requestObj, callback) => {
         return sendMessage();
     });
 };
-const buildConnect = (responseJson, callback) => {
-    if (!responseJson) {
-        return callback(new Error('Data format error!'));
+const buildConnect = (reponseJson, CallBack) => {
+    if (!reponseJson) {
+        return CallBack(new Error('Data format error!'));
     }
     const imapData = {
-        imapPortNumber: responseJson.imap_account.imap_port_number || 993,
-        imapServer: responseJson.imap_account.imap_server,
+        imapPortNumber: reponseJson.imap_account.imap_port_number,
+        imapServer: reponseJson.imap_account.imap_server,
         imapSsl: true,
-        imapUserName: responseJson.imap_account.imap_username,
-        imapUserPassword: responseJson.imap_account.imap_user_password
+        imapUserName: reponseJson.imap_account.imap_username,
+        imapUserPassword: reponseJson.imap_account.imap_user_password
     };
     const newMessage = message => {
-        console.log(`buildConnect newMessage`, newMessage.toString());
-        callback(null, { encryptedMessage: message });
+        CallBack(null, { encryptedMessage: message });
     };
     const exit = err => {
-        callback(null, { status: 'End.' });
+        CallBack(null, { status: 'End.' });
     };
-    const _imapPeer = new imapPeer_1.imapPeer(imapData, responseJson.client_folder, responseJson.server_folder, newMessage, exit);
-    _imapPeer.on('CoNETConnected', () => {
-        callback(null, { status: 'Connected to Seguro network.', connectUUID: _imapPeer.serialID });
+    const uu = new imapPeer_1.imapPeer(imapData, reponseJson.client_folder, reponseJson.server_folder, newMessage, exit);
+    uu.on('CoNETConnected', () => {
+        CallBack(null, { status: 'Connected to Seguro network.', connectUUID: uu.serialID });
     });
-    _imapPeer.on('ready', () => {
-        callback(null, { status: 'Connect to email server, waiting Seguro response.', connectUUID: _imapPeer.serialID });
+    uu.on('ready', () => {
+        CallBack(null, { status: 'Connect to email server, waiting Seguro response.', connectUUID: uu.serialID });
     });
-    return _imapPeer;
+    return uu;
 };
 exports.buildConnect = buildConnect;
 /**

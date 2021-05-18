@@ -7,7 +7,7 @@ const resetConnectTimeLength = 1000 * 60 * 15
 const pingPongTimeOut = 1000 * 15
 const debug = true
 
-export const sendMessageToFolder = ( IMapConnect: imapConnect, writeFolder: string, message: string, subject: string, createFolder: boolean, CallBack ) => {
+export const seneMessageToFolder = ( IMapConnect: imapConnect, writeFolder: string, message: string, subject: string, createFolder: boolean, CallBack ) => {
     const wImap = new qtGateImap ( IMapConnect, null, false, writeFolder, debug, null )
     let _callback = false
     //console.log ( `seneMessageToFolder !!! ${ subject }`)
@@ -152,7 +152,7 @@ export class imapPeer extends EventEmitter {
 
     public AppendWImap1 ( mail: string, uuid: string, CallBack ) {
         const sendData = mail ? Buffer.from (mail).toString ( 'base64' ) : ''
-        return sendMessageToFolder ( this.imapData, this.writeBox, sendData , uuid, true, CallBack )
+        return seneMessageToFolder ( this.imapData, this.writeBox, sendData , uuid, true, CallBack )
 
     }
 
@@ -163,7 +163,7 @@ export class imapPeer extends EventEmitter {
         debug ? saveLog ( `Make Time Out for a Ping, ping ID = [${ this.pingUuid }]`, true ): null
 
         return this.waitingReplyTimeOut = setTimeout (() => {
-            //debug ? saveLog ( `ON setTimeOutOfPing this.emit ( 'pingTimeOut' ) pingID = [${ this.pingUuid }] `, true ): null
+            debug ? saveLog ( `ON setTimeOutOfPing this.emit ( 'pingTimeOut' ) pingID = [${ this.pingUuid }] `, true ): null
             this.pingUuid = null
             this.connected = false
             this.pinging = false
@@ -262,7 +262,7 @@ export class imapPeer extends EventEmitter {
     public closePeer ( CallBack ) {
         return  series ([
             next => this.AppendWImap1 ('', 'Close.', next ),
-            next => this.rImap?.logout ( next )
+            next => this.rImap.logout ( next )
         ], CallBack )
 
     }
@@ -299,7 +299,7 @@ export class imapPeer extends EventEmitter {
 
     public sendDataToANewUuidFolder ( data: string, writeBox: string, subject: string, CallBack ) {
 
-        return sendMessageToFolder ( this.imapData, writeBox, data, subject, !this.connected, CallBack )
+        return seneMessageToFolder ( this.imapData, writeBox, data, subject, !this.connected, CallBack )
     }
 
 }

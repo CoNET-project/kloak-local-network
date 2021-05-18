@@ -29,7 +29,7 @@ import type { TLSSocket } from 'tls'
 
 
 const MAX_INT = 9007199254740992
-const debug = false
+const debug = true
 
 const NoopLoopWaitingTime = 1000 * 1
 
@@ -1141,6 +1141,7 @@ class ImapServerSwitchStream extends Transform {
 }
 
 const connectTimeOut = 10 * 1000
+
 export class qtGateImap extends EventEmitter {
     public socket: TLSSocket
     public imapStream: ImapServerSwitchStream = new ImapServerSwitchStream ( this, this.deleteBoxWhenEnd, this.debug )
@@ -1188,7 +1189,6 @@ export class qtGateImap extends EventEmitter {
         //console.log ( `qtGateImap connect mail server [${ this.IMapConnect.imapServer }: ${ this.port }] setTimeout [${ connectTimeOut /1000 }] !`)
 
         const timeout = setTimeout (() => {
-
             return this.destroyAll ( new Error ('connect time out!'))
         }, connectTimeOut )
 
@@ -1227,7 +1227,6 @@ export class qtGateImap extends EventEmitter {
 
         if ( this.socket && typeof this.socket.end === 'function' ) {
             this.socket.end ()
-
         }
 
         return this.emit ( 'end', err )
@@ -1369,4 +1368,3 @@ export const imapGetMediaFile = ( IMapConnect: imapConnect, fileName: string, Ca
         return CallBack ( null, retText )
     })
 }
-

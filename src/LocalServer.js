@@ -47,13 +47,11 @@ class LocalServer {
         };
         this.initialize = async () => {
             const app = express();
-            const wsServer = new ws_1.Server({ noServer: true });
             const wsServerConnect = new ws_1.Server({ noServer: true });
             app.use(express.static('static'));
             const folder = path_1.join(this.appsPath, 'launcher');
             app.use('/', express.static(folder));
             app.use(express.json());
-            app.use(cors());
             app.once('error', (err) => {
                 console.log(err);
                 return process.exit(1);
@@ -156,7 +154,6 @@ class LocalServer {
                         return res.end();
                     }
                     const ws = this.connect_peer_pool[index];
-                    console.log(util_1.inspect({ 'localhost:3000/postMessage post to Seguro network!': post_data.encryptedMessage }, false, 2, true));
                     return ws.AppendWImap1(post_data.encryptedMessage, '', err => {
                         if (err) {
                             res.sendStatus(500);
@@ -191,9 +188,9 @@ class LocalServer {
                 ws.on('message', message => {
                     let kk = null;
                     try {
-                        console.log(message);
-                        kk = JSON.parse(message);
-                        console.log(kk);
+                        if (typeof message === "string") {
+                            kk = JSON.parse(message);
+                        }
                     }
                     catch (ex) {
                         ws.send(JSON.stringify({ status: `Data format error! [${message}]` }));
@@ -258,7 +255,7 @@ class LocalServer {
                     });
                 });
             });
-            this.localserver = app.listen(this.PORT, () => {
+            this.localserver = app.listen(this.PORT, 'localhost', () => {
                 return console.table([
                     { 'Kloak Local Server': `http://localhost:${this.PORT}, local-path = [${folder}]` }
                 ]);
