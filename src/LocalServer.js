@@ -50,6 +50,7 @@ class LocalServer {
             const wsServerConnect = new ws_1.Server({ noServer: true });
             app.use(express.static('static'));
             const folder = path_1.join(this.appsPath, 'launcher');
+            app.use(cors());
             app.use('/', express.static(folder));
             app.use(express.json());
             app.once('error', (err) => {

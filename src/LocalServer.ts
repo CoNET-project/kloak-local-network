@@ -79,6 +79,7 @@ class LocalServer {
 
         app.use ( express.static ( 'static' ))
         const folder = join ( this.appsPath, 'launcher' )
+        app.use(cors());
         app.use ( '/', express.static ( folder ))
         app.use ( express.json ())
 
