@@ -217,7 +217,6 @@ class LocalServer {
                         });
                     });
                     peer.once('pingTimeOut', () => {
-                        peer.destroy();
                         ws.send(JSON.stringify({ status: 'pingTimeOut' }));
                         return ws.close();
                     });
