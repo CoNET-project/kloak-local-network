@@ -102,6 +102,7 @@ const buildConnect = (reponseJson, CallBack) => {
     if (!reponseJson) {
         return CallBack(new Error('Data format error!'));
     }
+    console.log(reponseJson);
     const imapData = {
         imapPortNumber: reponseJson.imap_account.imap_port_number,
         imapServer: reponseJson.imap_account.imap_server,

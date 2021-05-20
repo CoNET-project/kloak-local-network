@@ -116,6 +116,7 @@ const buildConnectGetImap = ( requestObj: connectRequest, CallBack ) => {
 
 export const buildConnect = ( reponseJson: connect_imap_reqponse, CallBack ) => {
 
+
     if ( ! reponseJson ) {
         return CallBack ( new Error ('Data format error!'))
     }
