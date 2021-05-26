@@ -206,10 +206,6 @@ class imapPeer extends events_1.EventEmitter {
         });
     }
     closePeer(CallBack) {
-        console.log(this.rImap);
-        if (typeof this.rImap?.logout !== 'function') {
-            return CallBack();
-        }
         return async_1.series([
             next => this.AppendWImap1('', 'Close.', next),
             next => this.rImap.logout(next)

@@ -53,7 +53,7 @@ export const testImapServer = ( CallBack ) => {
     const ret = []
     each ( imapServers, ( n, next ) => {
         return connerver ( n, ( err, data ) => {
-            ret.push ({ name: n, err: err, time: data })
+            ret.push ({ name: n, error: err, time: data })
             next ()
         })
     }, () => {
@@ -72,8 +72,7 @@ const buildConnectGetImap = ( requestObj: connectRequest, CallBack ) => {
 
     let appendCount = 0
     let timeout = requestObj.encrypted_response = null
-    console.log ( inspect ( imapData, false, 3, true ))
-
+    let _callback = false
     requestObj.error = null
 
     const newMail = mail => {
@@ -84,7 +83,12 @@ const buildConnectGetImap = ( requestObj: connectRequest, CallBack ) => {
     const cleanUp = () => {
         clearTimeout ( timeout )
         return rImap.logout (() => {
-            CallBack ( null, requestObj )
+            _callback = true
+            if ( requestObj.error ) {
+                return CallBack ( new Error ( requestObj.error ) )
+            }
+            return CallBack ( null, requestObj )
+
         })
     }
 
@@ -98,7 +102,7 @@ const buildConnectGetImap = ( requestObj: connectRequest, CallBack ) => {
                 }
                 return sendMessage ()
             }
-            timeout = setTimeout (() => {
+            return timeout = setTimeout (() => {
                 requestObj.error = 'Listening time out!'
                 return cleanUp ()
             }, 15000 )
@@ -111,11 +115,16 @@ const buildConnectGetImap = ( requestObj: connectRequest, CallBack ) => {
         return sendMessage ()
     })
 
+    rImap.once ( 'end', err => {
+        if ( err && !_callback ) {
+            return CallBack ( new Error ('Cant reach email server'))
+        }
+    })
+
 
 }
 
 export const buildConnect = ( reponseJson: connect_imap_reqponse, CallBack ) => {
-
 
     if ( ! reponseJson ) {
         return CallBack ( new Error ('Data format error!'))

@@ -11,7 +11,8 @@ import type { imapPeer } from './imapPeer'
 import { testImapServer, getInformationFromSeguro, buildConnect } from './network'
 const upload = require ( 'multer' )()
 const cors = require('cors')
-
+import { each } from 'async'
+const testDomainName = ['yahoo.com','microsoft.com','taobao.com','adobe.com']
 const getEncryptedMessagePublicKeyID = async ( encryptedMessage: string, CallBack ) => {
     const encryptObj = await readMessage({ armoredMessage: encryptedMessage })
     return CallBack ( null, encryptObj.getEncryptionKeyIds().map ( n => n.toHex().toUpperCase()))
@@ -160,8 +161,12 @@ class LocalServer {
          * 		time: connected time | null if have error
          * }
          */
-        app.get ( '/testNetwork', ( req, res ) => {
+        app.get ( '/testImapServer', ( req, res ) => {
             return testImapServer (( _err, data: any [] ) => {
+                console.log('Testing IMAP server')
+                data.map(res => {
+                    console.log(res)
+                })
                 return res.json ({ data: data })
             })
         })

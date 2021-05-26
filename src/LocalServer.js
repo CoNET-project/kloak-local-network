@@ -11,6 +11,7 @@ const util_1 = require("util");
 const network_1 = require("./network");
 const upload = require('multer')();
 const cors = require('cors');
+const testDomainName = ['yahoo.com', 'microsoft.com', 'taobao.com', 'adobe.com'];
 const getEncryptedMessagePublicKeyID = async (encryptedMessage, CallBack) => {
     const encryptObj = await openpgp_1.readMessage({ armoredMessage: encryptedMessage });
     return CallBack(null, encryptObj.getEncryptionKeyIds().map(n => n.toHex().toUpperCase()));
@@ -118,8 +119,12 @@ class LocalServer {
              * 		time: connected time | null if have error
              * }
              */
-            app.get('/testNetwork', (req, res) => {
+            app.get('/testImapServer', (req, res) => {
                 return network_1.testImapServer((_err, data) => {
+                    console.log('Testing IMAP server');
+                    data.map(res => {
+                        console.log(res);
+                    });
                     return res.json({ data: data });
                 });
             });

@@ -260,15 +260,11 @@ export class imapPeer extends EventEmitter {
     }
 
     public closePeer ( CallBack ) {
-        console.log(this.rImap)
-        if (typeof this.rImap?.logout !== 'function') {
-            return CallBack()
-        }
-
         return  series ([
-            next => this.AppendWImap1 ('', 'Close.', next ),
+            next => this.AppendWImap1 ( '', 'Close.', next ),
             next => this.rImap.logout ( next )
         ], CallBack )
+
     }
 
     public destroy ( err? ) {
