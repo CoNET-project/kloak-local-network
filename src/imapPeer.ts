@@ -4,11 +4,11 @@ import { waterfall, series, eachSeries } from 'async'
 import { v4 } from 'uuid'
 
 const resetConnectTimeLength = 1000 * 60 * 15
-const pingPongTimeOut = 1000 * 15
+const pingPongTimeOut = 1000 * 10
 const debug = true
 
 export const seneMessageToFolder = ( IMapConnect: imapConnect, writeFolder: string, message: string, subject: string, createFolder: boolean, CallBack ) => {
-    const wImap = new qtGateImap ( IMapConnect, null, false, writeFolder, debug, null )
+    const wImap = new qtGateImap ( IMapConnect, null, false, writeFolder, debug, null, true  )
     let _callback = false
     //console.log ( `seneMessageToFolder !!! ${ subject }`)
     wImap.once ( 'error', err => {
@@ -44,7 +44,7 @@ export const seneMessageToFolder = ( IMapConnect: imapConnect, writeFolder: stri
 
 export class imapPeer extends EventEmitter {
 
-    public domainName = this.imapData.imapUserName.split('@')[1]
+    public domainName = ''
     private waitingReplyTimeOut: NodeJS.Timer = null
     public pingUuid = null
     private doingDestroy = false
@@ -111,7 +111,7 @@ export class imapPeer extends EventEmitter {
 
 
 
-        if ( attr.length < 40 ) {
+        if ( attr.length < 100 ) {
 
             const _attr = attr.split (/\r?\n/)[0]
 
@@ -119,12 +119,11 @@ export class imapPeer extends EventEmitter {
                 this.Ping ( false )
             }
 
-            if ( subject === _attr ) {
-                console.log (`\n\nthis.replyPing [${_attr }]\n\n this.ping.uuid = [${ this.pingUuid }]`)
 
-                return this.replyPing ( subject )
-            }
-            return console.log (`new attr\n${ _attr }\n _attr [${ Buffer.from (_attr).toString ('hex') }] subject [${ Buffer.from ( subject ).toString ('hex') }]]!== attr 【${ JSON.stringify ( _attr )}】`)
+            console.log (`\n\nthis.replyPing [${_attr }]\n\n this.ping.uuid = [${ this.pingUuid }]`)
+
+            return this.replyPing ( subject )
+
         }
 
 
@@ -208,7 +207,7 @@ export class imapPeer extends EventEmitter {
 
         this.rImap = new qtGateImapRead ( this.imapData, this.listenBox, debug, email => {
             this.mail ( email )
-        }, true )
+        })
 
         this.rImap.once ( 'ready', () => {
             this.emit ( 'ready' )
@@ -253,6 +252,7 @@ export class imapPeer extends EventEmitter {
 
     constructor ( public imapData: imapConnect, private listenBox: string, private writeBox: string, public newMail, public exit: ( err?: number ) => void ) {
         super ()
+        this.domainName = this.imapData.imapUserName.split('@')[1]
         debug ? saveLog ( `doing peer account [${ imapData.imapUserName }] listen with[${ listenBox }], write with [${ writeBox }] `): null
         console.dir ( `newMail = ${ typeof newMail }` )
         this.newReadImap ()
@@ -260,10 +260,12 @@ export class imapPeer extends EventEmitter {
     }
 
     public closePeer ( CallBack ) {
-        return  series ([
-            next => this.AppendWImap1 ( '', 'Close.', next ),
-            next => this.rImap.logout ( next )
-        ], CallBack )
+        this.AppendWImap1 ( '', 'Close.', err => {
+            if ( typeof this.rImap?.logout === 'function') {
+                return this.rImap.logout ( CallBack )
+            }
+            return CallBack ()
+        })
 
     }
 

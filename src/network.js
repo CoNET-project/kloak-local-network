@@ -5,6 +5,7 @@ const tls_1 = require("tls");
 const async_1 = require("async");
 const Imap_1 = require("./Imap");
 const imapPeer_1 = require("./imapPeer");
+const util_1 = require("util");
 const connerver = (imapServer, CallBack) => {
     let err = null;
     let time;
@@ -55,6 +56,7 @@ const testImapServer = (CallBack) => {
 };
 exports.testImapServer = testImapServer;
 const buildConnectGetImap = (requestObj, CallBack) => {
+    console.log(util_1.inspect(requestObj, false, 3, true));
     const imapData = {
         imapPortNumber: requestObj.imap_account.imap_port_number,
         imapUserName: requestObj.imap_account.imap_username,

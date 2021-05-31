@@ -3160,10 +3160,10 @@ onetime@^5.1.0:
   dependencies:
     mimic-fn "^2.1.0"
 
-openpgp@5.0.0-1:
-  version "5.0.0-1"
-  resolved "https://registry.yarnpkg.com/openpgp/-/openpgp-5.0.0-1.tgz#28456d930895483770f099e373045e3ce9dbf9f9"
-  integrity sha512-yfmRStdmOQPZbNbvwyQrqjLOTGW4QO0/aok/Vt08Zhf4UB9w0tGA5c6zBxDefxq+SmXlqEsmdNu+AtYx5G8D6A==
+openpgp@^5.0.0-2:
+  version "5.0.0-2"
+  resolved "https://registry.yarnpkg.com/openpgp/-/openpgp-5.0.0-2.tgz#da54385eb9298c259bc6aa76ab556532298897d4"
+  integrity sha512-es+5A50Y+4JbtV+eugLPW9v/UkUIOufeOUyTcjbG8SMILNaLY9nEwUSJKDjQOadY+16w7Uqt0FDQ3Z1Vq7/F9g==
   dependencies:
     asn1.js "^5.0.0"
 

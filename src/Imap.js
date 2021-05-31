@@ -398,6 +398,12 @@ class ImapServerSwitchStream extends stream_1.Transform {
                             this.idleDoingDown();
                         }
                     }
+                    /**
+                     * 			Seupport Microsoft Exchange IMAP4
+                     */
+                    if (/BYE Connection closed/i.test(cmdArray[0])) {
+                        return this.imapServer.destroyAll(new Error(`ERROR: BYE Connection closed `));
+                    }
                     return callback();
                 }
                 default:
@@ -478,7 +484,7 @@ class ImapServerSwitchStream extends stream_1.Transform {
                 }
             }
             if (openBox) {
-                return this.openBox(CallBack);
+                return this.openBoxV1(folderName, CallBack);
             }
             return CallBack();
         };
@@ -492,39 +498,6 @@ class ImapServerSwitchStream extends stream_1.Transform {
             return this.push(this.cmd + '\r\n');
         }
         return this.imapServer.destroyAll(null);
-    }
-    openBox(CallBack) {
-        this.newSwitchRet = false;
-        let UID = 0;
-        this.doCommandCallback = (err) => {
-            if (err) {
-                return this.createBox(true, this.imapServer.listenFolder, CallBack);
-            }
-            CallBack(null, this.newSwitchRet, UID);
-        };
-        this.commandProcess = (text, cmdArray, next, _callback) => {
-            switch (cmdArray[0]) {
-                case '*': {
-                    if (/^EXISTS$|^UIDNEXT$|UNSEEN/i.test(cmdArray[2])) {
-                        const _num = text.split('UNSEEN ')[1];
-                        if (_num) {
-                            UID = parseInt(_num.split(']')[0]);
-                        }
-                        this.newSwitchRet = true;
-                    }
-                    return _callback();
-                }
-                default:
-                    return _callback();
-            }
-        };
-        const conText = this.imapServer.condStoreSupport ? ' (CONDSTORE)' : '';
-        this.Tag = `A${this.imapServer.TagCount1()}`;
-        this.cmd = `${this.Tag} SELECT "${this.imapServer.listenFolder}"${conText}`;
-        this.debug ? debugOut(this.cmd, false, this.imapServer.listenFolder || this.imapServer.imapSerialID) : null;
-        if (this.writable)
-            return this.push(this.cmd + '\r\n');
-        this.imapServer.destroyAll(null);
     }
     openBoxV1(folder, CallBack) {
         this.newSwitchRet = false;
@@ -920,7 +893,7 @@ class ImapServerSwitchStream extends stream_1.Transform {
 }
 const connectTimeOut = 10 * 1000;
 class qtGateImap extends events_1.EventEmitter {
-    constructor(IMapConnect, listenFolder, deleteBoxWhenEnd, writeFolder, debug, newMail, skipOldMail = true) {
+    constructor(IMapConnect, listenFolder, deleteBoxWhenEnd, writeFolder, debug, newMail, skipOldMail = false) {
         super();
         this.IMapConnect = IMapConnect;
         this.listenFolder = listenFolder;
@@ -929,21 +902,25 @@ class qtGateImap extends events_1.EventEmitter {
         this.debug = debug;
         this.newMail = newMail;
         this.skipOldMail = skipOldMail;
-        this.imapStream = new ImapServerSwitchStream(this, this.deleteBoxWhenEnd, this.debug);
+        this.imapStream = null;
         this.newSwitchRet = null;
         this.newSwitchError = null;
         this.fetching = null;
         this.tagcount = 0;
-        this.domainName = this.IMapConnect.imapUserName.split('@')[1];
+        this.domainName = '';
         this.serverSupportTag = null;
         this.idleSupport = null;
         this.condStoreSupport = null;
         this.literalPlus = null;
         this.fetchAddCom = '';
         this.imapEnd = false;
-        this.imapSerialID = crypto_1.createHash('md5').update(JSON.stringify(this.IMapConnect)).digest('hex').toUpperCase();
-        this.port = typeof this.IMapConnect.imapPortNumber === 'object' ? this.IMapConnect.imapPortNumber[0] : this.IMapConnect.imapPortNumber;
+        this.imapSerialID = '';
+        this.port = 0;
         this.connectTimeOut = null;
+        this.domainName = IMapConnect.imapUserName.split('@')[1];
+        this.imapSerialID = crypto_1.createHash('md5').update(JSON.stringify(IMapConnect)).digest('hex').toUpperCase();
+        this.port = typeof this.IMapConnect.imapPortNumber === 'object' ? this.IMapConnect.imapPortNumber[0] : this.IMapConnect.imapPortNumber;
+        this.imapStream = new ImapServerSwitchStream(this, this.deleteBoxWhenEnd, this.debug);
         this.connect();
         this.once(`error`, err => {
             debug ? exports.saveLog(`[${this.imapSerialID}] this.on error ${err && err.message ? err.message : null}`) : null;

@@ -487,6 +487,13 @@ class ImapServerSwitchStream extends Transform {
                         }
 
                     }
+
+                    /**
+                     * 			Seupport Microsoft Exchange IMAP4
+                     */
+                    if ( /BYE Connection closed/i.test ( cmdArray[0] )) {
+                        return this.imapServer.destroyAll ( new Error (`ERROR: BYE Connection closed `))
+                    }
                     return callback ()
                 }
                 default:
@@ -591,7 +598,7 @@ class ImapServerSwitchStream extends Transform {
             }
 
             if ( openBox ) {
-                return this.openBox ( CallBack )
+                return this.openBoxV1 ( folderName, CallBack )
             }
             return CallBack ()
         }
@@ -611,44 +618,6 @@ class ImapServerSwitchStream extends Transform {
 
     }
 
-    public openBox ( CallBack ) {
-        this.newSwitchRet = false
-        let UID = 0
-        this.doCommandCallback = ( err ) => {
-            if ( err ) {
-                return this.createBox ( true, this.imapServer.listenFolder, CallBack )
-            }
-            CallBack ( null, this.newSwitchRet, UID )
-        }
-
-        this.commandProcess = ( text: string, cmdArray: string[], next, _callback ) => {
-            switch ( cmdArray[0] ) {
-                case '*': {
-                    if ( /^EXISTS$|^UIDNEXT$|UNSEEN/i.test ( cmdArray [2])) {
-                        const _num = text.split ('UNSEEN ')[1]
-                        if ( _num ) {
-
-                            UID = parseInt ( _num.split (']')[0])
-                        }
-                        this.newSwitchRet = true
-
-                    }
-                    return _callback ()
-                }
-                default:
-                    return _callback ()
-            }
-        }
-
-        const conText = this.imapServer.condStoreSupport ? ' (CONDSTORE)' : ''
-
-        this.Tag = `A${ this.imapServer.TagCount1() }`
-        this.cmd = `${ this.Tag } SELECT "${ this.imapServer.listenFolder }"${ conText }`
-        this.debug ? debugOut ( this.cmd, false, this.imapServer.listenFolder || this.imapServer.imapSerialID ) : null
-        if ( this.writable )
-            return this.push ( this.cmd + '\r\n')
-        this.imapServer.destroyAll(null)
-    }
 
     public openBoxV1 ( folder: string, CallBack ) {
         this.newSwitchRet = false
@@ -1144,12 +1113,12 @@ const connectTimeOut = 10 * 1000
 
 export class qtGateImap extends EventEmitter {
     public socket: TLSSocket
-    public imapStream: ImapServerSwitchStream = new ImapServerSwitchStream ( this, this.deleteBoxWhenEnd, this.debug )
+    public imapStream: ImapServerSwitchStream = null
     public newSwitchRet = null
     public newSwitchError = null
     public fetching = null
     private tagcount = 0
-    public domainName = this.IMapConnect.imapUserName.split ('@')[1]
+    public domainName = ''
     public serverSupportTag = null
     public idleSupport = null
     public condStoreSupport = null
@@ -1157,10 +1126,10 @@ export class qtGateImap extends EventEmitter {
     public fetchAddCom = ''
     public imapEnd = false
 
-    public imapSerialID = createHash ( 'md5' ).update ( JSON.stringify( this.IMapConnect) ).digest ('hex').toUpperCase()
+    public imapSerialID = ''
 
 
-    private port: number = typeof this.IMapConnect.imapPortNumber === 'object' ? this.IMapConnect.imapPortNumber[0]: this.IMapConnect.imapPortNumber
+    private port = 0
     public TagCount1 () {
         if ( ++ this.tagcount < MAX_INT )
             return this.tagcount
@@ -1208,8 +1177,13 @@ export class qtGateImap extends EventEmitter {
 
     }
 
-    constructor ( public IMapConnect: imapConnect, public listenFolder: string, public deleteBoxWhenEnd: boolean, public writeFolder: string, private debug: boolean, public newMail: ( mail ) => void, public skipOldMail = true ) {
+    constructor ( public IMapConnect: imapConnect, public listenFolder: string, public deleteBoxWhenEnd: boolean, public writeFolder: string, private debug: boolean, public newMail: ( mail ) => void, public skipOldMail = false ) {
         super ()
+        this.domainName = IMapConnect.imapUserName.split ('@')[1]
+        this.imapSerialID = createHash ( 'md5' ).update ( JSON.stringify( IMapConnect) ).digest ('hex').toUpperCase()
+        this.port = typeof this.IMapConnect.imapPortNumber === 'object' ? this.IMapConnect.imapPortNumber[0]: this.IMapConnect.imapPortNumber
+
+        this.imapStream = new ImapServerSwitchStream ( this, this.deleteBoxWhenEnd, this.debug )
         this.connect ()
         this.once ( `error`, err => {
             debug ? saveLog ( `[${ this.imapSerialID }] this.on error ${ err && err.message ? err.message : null }`) : null

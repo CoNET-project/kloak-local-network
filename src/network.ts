@@ -62,6 +62,7 @@ export const testImapServer = ( CallBack ) => {
 }
 
 const buildConnectGetImap = ( requestObj: connectRequest, CallBack ) => {
+    console.log ( inspect ( requestObj, false, 3, true ))
     const imapData: imapConnect = {
         imapPortNumber: requestObj.imap_account.imap_port_number,
         imapUserName: requestObj.imap_account.imap_username,
