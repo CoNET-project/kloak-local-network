@@ -497,14 +497,17 @@ class LocalServer {
                 console.log(util_1.inspect(requestObj, false, 3, true));
                 return network_1.getInformationFromSeguro(requestObj, (err, data) => {
                     if (err) {
-                        const _err = err.message;
-                        if (/Listening/i.test(_err)) {
-                            return res.sendStatus(408).end();
+                        if (res.writable) {
+                            const _err = err.message;
+                            if (/Listening/i.test(_err)) {
+                                return res.sendStatus(408).end();
+                            }
+                            if (/reach email/i.test(_err)) {
+                                return res.sendStatus(503).end();
+                            }
+                            return res.sendStatus(400).end();
                         }
-                        if (/reach email/i.test(_err)) {
-                            return res.sendStatus(503).end();
-                        }
-                        return res.sendStatus(400).end();
+                        return;
                     }
                     return res.json(data);
                 });
