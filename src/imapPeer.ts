@@ -2,6 +2,7 @@ import { EventEmitter } from 'events'
 import { getMailSubject, getMailAttached, saveLog, qtGateImap, qtGateImapRead } from './Imap'
 import { waterfall, series, eachSeries } from 'async'
 import { v4 } from 'uuid'
+import { inspect } from 'util'
 
 const resetConnectTimeLength = 1000 * 60 * 15
 const pingPongTimeOut = 1000 * 10
@@ -68,17 +69,7 @@ export class imapPeer extends EventEmitter {
 
         this.rImap_restart = true
 
-        if ( typeof this.rImap?.imapStream?.loginoutWithCheck === 'function') {
-            return this.rImap.imapStream.loginoutWithCheck (() => {
-                if ( typeof this.exit === 'function') {
-                    this.exit (0)
-                }
-            })
-        }
-        if ( typeof this.exit === 'function') {
-            this.exit (0)
-        }
-
+        return this.destroy ( null )
 
     }
 
@@ -201,8 +192,9 @@ export class imapPeer extends EventEmitter {
         if ( this.makeRImap || this.rImap && this.rImap.imapStream && this.rImap.imapStream.readable ) {
             return debug ? saveLog (`newReadImap have rImap.imapStream.readable = true, stop!`, true ): null
         }
+        this.rImap_restart = false
         this.makeRImap = true
-        //saveLog ( `=====> newReadImap!`, true )
+        console.log ( inspect ({ newReadImap: new Error ('newReadImap')}, false, 3, true ) )
 
 
         this.rImap = new qtGateImapRead ( this.imapData, this.listenBox, debug, email => {
@@ -221,31 +213,20 @@ export class imapPeer extends EventEmitter {
             this.makeRImap = false
             debug ? saveLog ( `rImap on Error [${ err.message }]`, true ): null
             if ( err && err.message && /auth|login|log in|Too many simultaneous|UNAVAILABLE/i.test ( err.message )) {
-                return this.destroy (1)
+                return this.destroy ( null )
             }
+
             if ( this.rImap && this.rImap.destroyAll && typeof this.rImap.destroyAll === 'function') {
-                return this.rImap.destroyAll ( null )
+
+                this.rImap.destroyAll ( null )
+                return this.destroy ( null )
             }
 
 
         })
 
         this.rImap.on ( 'end', err => {
-            this.rImap.removeAllListeners ()
-            this.rImap = null
-            this.makeRImap = false
-            clearTimeout ( this.waitingReplyTimeOut )
-            if ( this.rImap_restart ) {
-                console.dir (`rImap.on ( 'end' ) this.rImap_restart = TRUE`, err )
-            }
 
-
-            if ( typeof this.exit === 'function') {
-                debug ? saveLog (`imapPeer rImap on END!`): null
-
-                this.exit ( err )
-                return this.exit = null
-            }
             debug ? saveLog (`imapPeer rImap on END! but this.exit have not a function `): null
         })
     }
@@ -269,13 +250,28 @@ export class imapPeer extends EventEmitter {
 
     }
 
+    private cleanupImap ( err ) {
+        this.rImap.removeAllListeners ()
+        this.rImap = null
+        this.doingDestroy = false
+        if ( this.restart_rImap ) {
+            return this.newReadImap ()
+        }
+        if ( err && typeof this.exit === 'function' ) {
+            this.exit ( err )
+            return this.exit = null
+        }
+        console.log (inspect ({ restart_rImap: `restart listenIMAP with restart_rImap false!`}, false, 3, true ))
+        this.newReadImap ()
+    }
+
     public destroy ( err? ) {
 
         clearTimeout ( this.waitingReplyTimeOut )
         clearTimeout ( this.needPingTimeOut )
         clearTimeout ( this.checkSocketConnectTime )
-        console.log (`destroy IMAP!`)
-        console.trace ()
+        console.log ( inspect ({ destroy: new Error ()}, false, 3, true ))
+
         if ( this.doingDestroy ) {
             return console.log (`destroy but this.doingDestroy = ture`)
         }
@@ -283,20 +279,17 @@ export class imapPeer extends EventEmitter {
         this.doingDestroy = true
         this.peerReady = false
 
-        if ( this.rImap ) {
-            return this.rImap.imapStream.loginoutWithCheck (() => {
-                if ( typeof this.exit === 'function' ) {
-                    this.exit ( err )
-                    this.exit = null
-                }
+        if ( typeof this.rImap?.imapStream?.loginoutWithCheck ) {
+            console.log ( inspect ({ destroy: `imapStream?.loginoutWithCheck()`}))
+            return this.rImap?.imapStream?.loginoutWithCheck (() => {
+
+
+                return this.cleanupImap ( err )
 
             })
         }
 
-        if  ( this.exit && typeof this.exit === 'function' ) {
-            this.exit ( err )
-            this.exit = null
-        }
+        return this.cleanupImap ( err )
     }
 
     public sendDataToANewUuidFolder ( data: string, writeBox: string, subject: string, CallBack ) {

@@ -123,7 +123,7 @@ const buildConnect = (reponseJson, CallBack) => {
         CallBack(null, { encryptedMessage: message });
     };
     const exit = err => {
-        CallBack(null, { status: 'End.' });
+        CallBack(new Error('imapPeerEnd!'));
     };
     const uu = new imapPeer_1.imapPeer(imapData, reponseJson.client_folder, reponseJson.server_folder, newMessage, exit);
     uu.on('CoNETConnected', () => {

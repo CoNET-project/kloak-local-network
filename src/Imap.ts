@@ -478,6 +478,12 @@ class ImapServerSwitchStream extends Transform {
                 case '+':
                 case '*': {
                     clearTimeout ( this.idleResponsrTime )
+                    /**
+                     * 			Seupport Microsoft Exchange IMAP4
+                     */
+                    if ( /BYE Connection closed/i.test ( cmdArray[0] )) {
+                        return this.imapServer.destroyAll ( new Error (`ERROR: BYE Connection closed `))
+                    }
 
                     if ( /^RECENT$|^EXISTS$/i.test ( cmdArray[2] )) {
                         this.newSwitchRet = true
@@ -488,12 +494,7 @@ class ImapServerSwitchStream extends Transform {
 
                     }
 
-                    /**
-                     * 			Seupport Microsoft Exchange IMAP4
-                     */
-                    if ( /BYE Connection closed/i.test ( cmdArray[0] )) {
-                        return this.imapServer.destroyAll ( new Error (`ERROR: BYE Connection closed `))
-                    }
+
                     return callback ()
                 }
                 default:

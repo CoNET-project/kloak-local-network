@@ -392,17 +392,17 @@ class ImapServerSwitchStream extends stream_1.Transform {
                 case '+':
                 case '*': {
                     timers_1.clearTimeout(this.idleResponsrTime);
-                    if (/^RECENT$|^EXISTS$/i.test(cmdArray[2])) {
-                        this.newSwitchRet = true;
-                        if (this.imapServer.idleSupport) {
-                            this.idleDoingDown();
-                        }
-                    }
                     /**
                      * 			Seupport Microsoft Exchange IMAP4
                      */
                     if (/BYE Connection closed/i.test(cmdArray[0])) {
                         return this.imapServer.destroyAll(new Error(`ERROR: BYE Connection closed `));
+                    }
+                    if (/^RECENT$|^EXISTS$/i.test(cmdArray[2])) {
+                        this.newSwitchRet = true;
+                        if (this.imapServer.idleSupport) {
+                            this.idleDoingDown();
+                        }
                     }
                     return callback();
                 }

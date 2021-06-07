@@ -375,8 +375,8 @@ const Imap_1 = require("./Imap");
 const util_1 = require("util");
 const network_1 = require("./network");
 const upload = require('multer')();
-const testDomainName = ['yahoo.com', 'microsoft.com', 'taobao.com', 'adobe.com'];
 const cors = require('cors');
+const testDomainName = ['yahoo.com', 'microsoft.com', 'taobao.com', 'adobe.com'];
 const getEncryptedMessagePublicKeyID = async (encryptedMessage, CallBack) => {
     const encryptObj = await openpgp_1.readMessage({ armoredMessage: encryptedMessage });
     return CallBack(null, encryptObj.getEncryptionKeyIDs().map(n => n.toHex().toUpperCase()));
@@ -416,23 +416,11 @@ class LocalServer {
             const wsServerConnect = new ws_1.Server({ noServer: true });
             app.use(express.static('static'));
             const folder = path_1.join(this.appsPath, 'launcher');
-            app.use(cors());
             app.use('/', express.static(folder));
             app.use(express.json());
             app.once('error', (err) => {
                 console.log(err);
                 return process.exit(1);
-            });
-            app.get('/', async (req, res) => {
-                // res.sendStatus(200)
-                console.log(this.appsPath);
-                const launcherHTMLPath = path_1.join(this.appsPath + '/launcher' + '/index.html');
-                const hasLauncher = await fse.pathExists(launcherHTMLPath);
-                console.log(launcherHTMLPath);
-                if (hasLauncher) {
-                    return res.status(200).sendFile(launcherHTMLPath);
-                }
-                return res.status(200).send("<p style='font-family: Arial, Helvetica, sans-serif;'>Oh no! You don't have the Kloak Platform Launcher!</p>");
             });
             app.post('/update', upload.single('app_data'), (req, res) => {
                 const { app_id } = req.body;
@@ -497,14 +485,18 @@ class LocalServer {
                 console.log(util_1.inspect(requestObj, false, 3, true));
                 return network_1.getInformationFromSeguro(requestObj, (err, data) => {
                     if (err) {
+                        console.log(util_1.inspect({ getInformationFromSeguro_ERROR: err }, false, 3, true));
                         if (res.writable) {
                             const _err = err.message;
                             if (/Listening/i.test(_err)) {
+                                console.log(util_1.inspect({ getInformationFromSeguro_ERROR: `res.sendStatus( 408 ).end ()` }, false, 3, true));
                                 return res.sendStatus(408).end();
                             }
                             if (/reach email/i.test(_err)) {
+                                console.log(util_1.inspect({ getInformationFromSeguro_ERROR: `res.sendStatus( 503 ).end ()` }, false, 3, true));
                                 return res.sendStatus(503).end();
                             }
+                            console.log(util_1.inspect({ getInformationFromSeguro_ERROR: `res.sendStatus( 400 ).end ()` }, false, 3, true));
                             return res.sendStatus(400).end();
                         }
                         return;

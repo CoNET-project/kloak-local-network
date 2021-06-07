@@ -377,9 +377,8 @@ import { inspect } from 'util'
 import type { imapPeer } from './imapPeer'
 import { testImapServer, getInformationFromSeguro, buildConnect } from './network'
 const upload = require ( 'multer' )()
-import { each } from 'async'
-const testDomainName = ['yahoo.com','microsoft.com','taobao.com','adobe.com']
 const cors = require('cors')
+const testDomainName = ['yahoo.com','microsoft.com','taobao.com','adobe.com']
 
 const getEncryptedMessagePublicKeyID = async ( encryptedMessage: string, CallBack ) => {
     const encryptObj = await readMessage({ armoredMessage: encryptedMessage })
@@ -391,7 +390,7 @@ class LocalServer {
     private localserver: Server = null
 
     private connect_peer_pool: any [] = []
-        constructor ( private PORT = 3000, private appsPath: string = join ( __dirname, 'apps' ) ) {
+    constructor ( private PORT = 3000, private appsPath: string = join ( __dirname, 'apps' ) ) {
         this.initialize()
     }
 
@@ -448,7 +447,6 @@ class LocalServer {
 
         app.use ( express.static ( 'static' ))
         const folder = join ( this.appsPath, 'launcher' )
-        app.use(cors());
         app.use ( '/', express.static ( folder ))
         app.use ( express.json ())
 
@@ -456,20 +454,6 @@ class LocalServer {
             console.log ( err )
             return process.exit (1)
         })
-
-        app.get('/', async (req: express.Request, res: express.Response) => {
-            // res.sendStatus(200)
-            console.log(this.appsPath)
-            const launcherHTMLPath = join(
-                this.appsPath  + '/launcher' + '/index.html'
-            );
-            const hasLauncher = await fse.pathExists(launcherHTMLPath);
-            console.log (launcherHTMLPath)
-            if (hasLauncher) {
-                return res.status(200).sendFile(launcherHTMLPath);
-            }
-            return res.status(200).send("<p style='font-family: Arial, Helvetica, sans-serif;'>Oh no! You don't have the Kloak Platform Launcher!</p>")
-        });
 
         app.post ( '/update', upload.single ( 'app_data' ),
             ( req: express.Request, res: express.Response ) => {
@@ -543,20 +527,28 @@ class LocalServer {
             console.log ( inspect ( requestObj, false, 3, true ))
             return getInformationFromSeguro ( requestObj, ( err, data )=> {
                 if ( err ) {
+                    console.log ( inspect ({getInformationFromSeguro_ERROR: err }, false, 3, true ))
                     if ( res.writable ) {
                         const _err = err.message
+
                         if ( /Listening/i.test ( _err )) {
+                            console.log ( inspect ({ getInformationFromSeguro_ERROR: `res.sendStatus( 408 ).end ()` }, false, 3, true ))
                             return res.sendStatus ( 408 ).end ()
                         }
+
+
                         if ( /reach email/i.test ( _err )) {
+                            console.log ( inspect ({ getInformationFromSeguro_ERROR: `res.sendStatus( 503 ).end ()` }, false, 3, true ))
                             return res.sendStatus ( 503 ).end ()
                         }
+                        console.log ( inspect ({ getInformationFromSeguro_ERROR: `res.sendStatus( 400 ).end ()` }, false, 3, true ))
                         return res.sendStatus ( 400 ).end ()
                     }
                     return
                 }
                 return res.json ( data )
             })
+
         })
 
         /**

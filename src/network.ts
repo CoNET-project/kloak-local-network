@@ -142,7 +142,7 @@ export const buildConnect = ( reponseJson: connect_imap_reqponse, CallBack ) => 
     }
 
     const exit = err => {
-        CallBack ( null, { status: 'End.'} )
+        CallBack ( new Error ('imapPeerEnd!'))
     }
 
     const uu = new imapPeer ( imapData, reponseJson.client_folder, reponseJson.server_folder, newMessage, exit )

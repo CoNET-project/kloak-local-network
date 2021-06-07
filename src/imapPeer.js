@@ -5,6 +5,7 @@ const events_1 = require("events");
 const Imap_1 = require("./Imap");
 const async_1 = require("async");
 const uuid_1 = require("uuid");
+const util_1 = require("util");
 const resetConnectTimeLength = 1000 * 60 * 15;
 const pingPongTimeOut = 1000 * 10;
 const debug = true;
@@ -71,16 +72,7 @@ class imapPeer extends events_1.EventEmitter {
             return console.log(`already restart_rImap STOP!`);
         }
         this.rImap_restart = true;
-        if (typeof this.rImap?.imapStream?.loginoutWithCheck === 'function') {
-            return this.rImap.imapStream.loginoutWithCheck(() => {
-                if (typeof this.exit === 'function') {
-                    this.exit(0);
-                }
-            });
-        }
-        if (typeof this.exit === 'function') {
-            this.exit(0);
-        }
+        return this.destroy(null);
     }
     checklastAccessTime() {
         clearTimeout(this.checkSocketConnectTime);
@@ -165,8 +157,9 @@ class imapPeer extends events_1.EventEmitter {
         if (this.makeRImap || this.rImap && this.rImap.imapStream && this.rImap.imapStream.readable) {
             return debug ? Imap_1.saveLog(`newReadImap have rImap.imapStream.readable = true, stop!`, true) : null;
         }
+        this.rImap_restart = false;
         this.makeRImap = true;
-        //saveLog ( `=====> newReadImap!`, true )
+        console.log(util_1.inspect({ newReadImap: new Error('newReadImap') }, false, 3, true));
         this.rImap = new Imap_1.qtGateImapRead(this.imapData, this.listenBox, debug, email => {
             this.mail(email);
         });
@@ -181,25 +174,14 @@ class imapPeer extends events_1.EventEmitter {
             this.makeRImap = false;
             debug ? Imap_1.saveLog(`rImap on Error [${err.message}]`, true) : null;
             if (err && err.message && /auth|login|log in|Too many simultaneous|UNAVAILABLE/i.test(err.message)) {
-                return this.destroy(1);
+                return this.destroy(null);
             }
             if (this.rImap && this.rImap.destroyAll && typeof this.rImap.destroyAll === 'function') {
-                return this.rImap.destroyAll(null);
+                this.rImap.destroyAll(null);
+                return this.destroy(null);
             }
         });
         this.rImap.on('end', err => {
-            this.rImap.removeAllListeners();
-            this.rImap = null;
-            this.makeRImap = false;
-            clearTimeout(this.waitingReplyTimeOut);
-            if (this.rImap_restart) {
-                console.dir(`rImap.on ( 'end' ) this.rImap_restart = TRUE`, err);
-            }
-            if (typeof this.exit === 'function') {
-                debug ? Imap_1.saveLog(`imapPeer rImap on END!`) : null;
-                this.exit(err);
-                return this.exit = null;
-            }
             debug ? Imap_1.saveLog(`imapPeer rImap on END! but this.exit have not a function `) : null;
         });
     }
@@ -211,29 +193,37 @@ class imapPeer extends events_1.EventEmitter {
             return CallBack();
         });
     }
+    cleanupImap(err) {
+        this.rImap.removeAllListeners();
+        this.rImap = null;
+        this.doingDestroy = false;
+        if (this.restart_rImap) {
+            return this.newReadImap();
+        }
+        if (err && typeof this.exit === 'function') {
+            this.exit(err);
+            return this.exit = null;
+        }
+        console.log(util_1.inspect({ restart_rImap: `restart listenIMAP with restart_rImap false!` }, false, 3, true));
+        this.newReadImap();
+    }
     destroy(err) {
         clearTimeout(this.waitingReplyTimeOut);
         clearTimeout(this.needPingTimeOut);
         clearTimeout(this.checkSocketConnectTime);
-        console.log(`destroy IMAP!`);
-        console.trace();
+        console.log(util_1.inspect({ destroy: new Error() }, false, 3, true));
         if (this.doingDestroy) {
             return console.log(`destroy but this.doingDestroy = ture`);
         }
         this.doingDestroy = true;
         this.peerReady = false;
-        if (this.rImap) {
-            return this.rImap.imapStream.loginoutWithCheck(() => {
-                if (typeof this.exit === 'function') {
-                    this.exit(err);
-                    this.exit = null;
-                }
+        if (typeof this.rImap?.imapStream?.loginoutWithCheck) {
+            console.log(util_1.inspect({ destroy: `imapStream?.loginoutWithCheck()` }));
+            return this.rImap?.imapStream?.loginoutWithCheck(() => {
+                return this.cleanupImap(err);
             });
         }
-        if (this.exit && typeof this.exit === 'function') {
-            this.exit(err);
-            this.exit = null;
-        }
+        return this.cleanupImap(err);
     }
     sendDataToANewUuidFolder(data, writeBox, subject, CallBack) {
         return exports.seneMessageToFolder(this.imapData, writeBox, data, subject, !this.connected, CallBack);
