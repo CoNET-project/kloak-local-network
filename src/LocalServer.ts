@@ -447,8 +447,28 @@ class LocalServer {
 
         app.use ( express.static ( 'static' ))
         const folder = join ( this.appsPath, 'launcher' )
+        app.use(cors());
         app.use ( '/', express.static ( folder ))
         app.use ( express.json ())
+
+        app.once ( 'error', ( err: any ) => {
+            console.log ( err )
+            return process.exit (1)
+        })
+
+        app.get('/', async (req: express.Request, res: express.Response) => {
+            // res.sendStatus(200)
+            console.log(this.appsPath)
+            const launcherHTMLPath = join(
+                this.appsPath  + '/launcher' + '/index.html'
+            );
+            const hasLauncher = await fse.pathExists(launcherHTMLPath);
+            console.log (launcherHTMLPath)
+            if (hasLauncher) {
+                return res.status(200).sendFile(launcherHTMLPath);
+            }
+            return res.status(200).send("<p style='font-family: Arial, Helvetica, sans-serif;'>Oh no! You don't have the Kloak Platform Launcher!</p>")
+        });
 
         app.once ( 'error', ( err: any ) => {
             console.log ( err )

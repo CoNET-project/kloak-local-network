@@ -118,12 +118,12 @@ export class imapPeer extends EventEmitter {
         }
 
 
-        /**
-         * 			ignore old mail
-         */
-        if ( ! this.connected ) {
-            return
-        }
+        // /**
+        //  * 			ignore old mail
+        //  */
+        // if ( ! this.connected ) {
+        //     return
+        // }
 
         return this.newMail ( attr, subject )
 

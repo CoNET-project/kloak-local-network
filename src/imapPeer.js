@@ -102,12 +102,12 @@ class imapPeer extends events_1.EventEmitter {
             console.log(`\n\nthis.replyPing [${_attr}]\n\n this.ping.uuid = [${this.pingUuid}]`);
             return this.replyPing(subject);
         }
-        /**
-         * 			ignore old mail
-         */
-        if (!this.connected) {
-            return;
-        }
+        // /**
+        //  * 			ignore old mail
+        //  */
+        // if ( ! this.connected ) {
+        //     return
+        // }
         return this.newMail(attr, subject);
     }
     replyPing(uuid) {
