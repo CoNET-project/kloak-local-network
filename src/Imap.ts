@@ -24,7 +24,7 @@ import { waterfall, series, eachSeries } from 'async'
 import { createHash, randomBytes } from 'crypto'
 import { setTimeout, clearTimeout } from 'timers';
 import { Buffer } from 'buffer'
-import * as Util from 'util'
+import { inspect }  from 'util'
 import type { TLSSocket } from 'tls'
 
 
@@ -527,6 +527,7 @@ class ImapServerSwitchStream extends Transform {
 
     public loginoutWithCheck ( CallBack ) {
         if ( this.needLoginout ) {
+            console.log ( inspect ({ "loginoutWithCheck this.needLoginout already have ": new Error ()}, false, 3, true ))
             return CallBack ()
         }
         this.needLoginout = CallBack
@@ -1144,7 +1145,7 @@ export class qtGateImap extends EventEmitter {
         const _connect = () => {
 
             clearTimeout ( timeout )
-            console.log ( Util.inspect ( this.socket, false, 2, true ))
+            console.log ( inspect ( this.socket, false, 2, true ))
 
             this.socket = conn
             this.socket.setKeepAlive ( true )

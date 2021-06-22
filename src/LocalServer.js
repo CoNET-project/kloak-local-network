@@ -490,6 +490,7 @@ class LocalServer {
              */
             app.get('/testImapServer', (req, res) => {
                 return network_1.testImapServer((_err, data) => {
+                    console.log(util_1.inspect(data, false, 3, true));
                     return res.json({ data: data });
                 });
             });

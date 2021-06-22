@@ -535,6 +535,7 @@ class LocalServer {
          */
         app.get ( '/testImapServer', ( req, res ) => {
             return testImapServer (( _err, data: any [] ) => {
+                console.log ( inspect ( data, false, 3, true ))
                 return res.json ({ data: data })
             })
         })
